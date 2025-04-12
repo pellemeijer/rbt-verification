@@ -1,0 +1,29 @@
+{-# OPTIONS_GHC -fplugin=LiquidHaskell #-}
+
+module RedBlackTree (isMember, okasakiInsert) where
+
+data Color = Red | Black
+
+data RBTree a = Leaf | Node Color (RBTree a) a (RBTree a)
+
+isMember :: (Ord a) => a -> RBTree a -> Bool
+isMember _ Leaf = False
+isMember x (Node _ left val right)
+  | x < val = isMember x left
+  | x == val = True
+  | x > val = isMember x right
+  | otherwise = False
+
+okasakiInsert :: (Ord a) => a -> RBTree a -> RBTree a
+okasakiInsert x tree = makeBlack (ins tree)
+  where
+    ins Leaf = Node Red Leaf x Leaf
+    ins (Node color left val right)
+      | x < val = balance color (ins left) val right
+      | x == val = Node color left val right
+      | x > val = balance color left val (ins right)
+      | otherwise = error "unexpected pattern"
+    makeBlack (Node _ left val right) = Node Black left val right
+	makeBlack Leaf = Leaf
+
+balance Black (Node Red (Node Red node1 val1 node2) val2 node3) val3 node4 = Node Red (Node Black node1 val1 node2) val2 (Node Black node3 val3 node4)
