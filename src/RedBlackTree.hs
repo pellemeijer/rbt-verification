@@ -1,10 +1,22 @@
 -- {-# OPTIONS_GHC -fplugin=LiquidHaskell #-}
 
-module RedBlackTree (isMember, okasakiInsert) where
+module RedBlackTree
+  ( Color (..),
+    RBTree (..),
+    isMember,
+    okasakiInsert,
+    listToTree,
+  )
+where
 
 data Color = Red | Black
+  deriving (Show, Eq)
 
 data RBTree a = Leaf | Node Color (RBTree a) a (RBTree a)
+  deriving (Show, Eq)
+
+listToTree :: (Ord a) => [a] -> RBTree a
+listToTree = foldl (flip okasakiInsert) Leaf
 
 isMember :: (Ord a) => a -> RBTree a -> Bool
 isMember _ Leaf = False
@@ -12,7 +24,7 @@ isMember x (Node _ left val right)
   | x < val = isMember x left
   | x == val = True
   | x > val = isMember x right
-  | otherwise = False
+  | otherwise = error "Error: unreachable case in isMember"
 
 okasakiInsert :: (Ord a) => a -> RBTree a -> RBTree a
 okasakiInsert x tree = makeBlack (ins tree)
@@ -22,7 +34,7 @@ okasakiInsert x tree = makeBlack (ins tree)
       | x < val = balance (Node color (ins left) val right)
       | x == val = Node color left val right
       | x > val = balance (Node color left val (ins right))
-      | otherwise = Node color left val right
+      | otherwise = error "Error: unreachable case in okasakiInsert"
 
 makeBlack :: RBTree a -> RBTree a
 makeBlack (Node _ left val right) = Node Black left val right

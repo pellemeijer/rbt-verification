@@ -104,4 +104,5 @@ test-suite rbt-verification-test
     -- Test dependencies.
     build-depends:
         base ^>=4.20.0.0,
+        HUnit,
         rbt-verification
