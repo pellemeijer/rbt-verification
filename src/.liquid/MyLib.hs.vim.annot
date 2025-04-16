@@ -1,3 +1,0 @@
-1:1-1:1::RedBlac.$trModule :: "GHC.Types.Module"
-6:1-6:9::RedBlac.someFunc :: "(GHC.Types.IO ())"
-6:21-6:31::lq_anf$##7205759403792803714 :: "[GHC.Types.Char]"

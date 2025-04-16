@@ -19,7 +19,7 @@ testListToTree =
     TestList
       [ "listToTree empty list" ~: Leaf ~=? listToTree ([] :: [Int]),
         "listToTree single element" ~: Node Black Leaf 5 Leaf ~=? listToTree ([5] :: [Int]),
-        "listToTree duplicates" ~: listToTree [1, 2, 3] ~=? listToTree ([1, 2, 2, 3, 1] :: [Int]),
+        "listToTree duplicates" ~: listToTree [1, 2, 3] ~=? listToTree ([1, 1, 2, 2, 3] :: [Int]),
         "listToTree ascending order properties"
           ~: let list = ([1 .. 7] :: [Int])
                  tree = listToTree list

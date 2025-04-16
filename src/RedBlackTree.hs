@@ -1,4 +1,4 @@
--- {-# OPTIONS_GHC -fplugin=LiquidHaskell #-}
+{-# OPTIONS_GHC -fplugin=LiquidHaskell #-}
 
 module RedBlackTree
   ( Color (..),
@@ -41,9 +41,12 @@ makeBlack (Node _ left val right) = Node Black left val right
 makeBlack Leaf = Leaf
 
 balance :: RBTree a -> RBTree a
-balance (Node Black (Node Red (Node Red node1 val1 node2) val2 node3) val3 node4) = Node Red (Node Black node1 val1 node2) val2 (Node Black node3 val3 node4)
-balance (Node Black (Node Red node1 val1 (Node Red node2 val2 node3)) val3 node4) = Node Red (Node Black node1 val1 node2) val2 (Node Black node3 val3 node4)
-balance (Node Black node1 val1 (Node Red (Node Red node2 val2 node3) val3 node4)) = Node Red (Node Black node1 val1 node2) val2 (Node Black node3 val3 node4)
-balance (Node Black node1 val1 (Node Red node2 val2 (Node Red node3 val3 node4))) = Node Red (Node Black node1 val1 node2) val2 (Node Black node3 val3 node4)
-balance (Node color left val right) = Node color left val right
-balance Leaf = Leaf
+balance (Node Black (Node Red (Node Red a x b) y c) z d) =
+  Node Red (Node Black a x b) y (Node Black c z d)
+balance (Node Black (Node Red a x (Node Red b y c)) z d) =
+  Node Red (Node Black a x b) y (Node Black c z d)
+balance (Node Black a x (Node Red (Node Red b y c) z d)) =
+  Node Red (Node Black a x b) y (Node Black c z d)
+balance (Node Black a x (Node Red b y (Node Red c z d))) =
+  Node Red (Node Black a x b) y (Node Black c z d)
+balance tree = tree
