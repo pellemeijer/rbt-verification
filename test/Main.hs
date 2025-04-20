@@ -65,10 +65,10 @@ tree1_10 = listToTree ([1 .. 10] :: [Int])
 
 testOkasakiInsert :: Test
 testOkasakiInsert =
-  TestLabel "okasakiInsert Tests" $
+  TestLabel "insert Tests" $
     TestList
-      [ "insert into empty" ~: Node Black Leaf 5 Leaf ~=? okasakiInsert (5 :: Int) Leaf,
-        "insert duplicate" ~: listToTree ([10, 5] :: [Int]) ~=? okasakiInsert 5 (listToTree ([10, 5] :: [Int])),
+      [ "insert into empty" ~: Node Black Leaf 5 Leaf ~=? insert (5 :: Int) Leaf,
+        "insert duplicate" ~: listToTree ([10, 5] :: [Int]) ~=? insert 5 (listToTree ([10, 5] :: [Int])),
         "insert 1..3 check structure" ~: Node Black (Node Black Leaf 1 Leaf) 2 (Node Black Leaf 3 Leaf) ~=? listToTree ([1, 2, 3] :: [Int]),
         "insert 3..1 check structure" ~: Node Black (Node Black Leaf 1 Leaf) 2 (Node Black Leaf 3 Leaf) ~=? listToTree ([3, 2, 1] :: [Int]),
         "insert 1..10 no red-red" ~: checkRedRed tree1_10 @? "1..10 No Red-Red",
