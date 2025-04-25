@@ -16,17 +16,18 @@ where
 data Color = Red | Black
   deriving (Show, Eq)
 
+{-@
+data RBTree a where
+  Leaf :: {leaf:RBTree a | blackHeight leaf == 1}
+  Node :: color:Color
+       -> left:{v:RBTree a | redRedInvariant v}
+       -> val:a
+       -> right:{v:RBTree a | redRedInvariant v}
+       -> v:RBTree a
+@-}
+
 data RBTree a = Leaf | Node Color (RBTree a) a (RBTree a)
   deriving (Show, Eq)
-
--- {-@
--- data RBTree a where
---   Leaf :: {leaf:RBTree a | blackHeight leaf == 1}
---   Node :: color:Color
---        -> left:{v:RBTree a | redRedInvariant v}
---        -> val:a
---        -> right:{v:RBTree a | redRedInvariant v}
--- @-}
 
 listToTree :: (Ord a) => [a] -> RBTree a
 listToTree = foldl (flip insert) Leaf
@@ -73,6 +74,7 @@ blackHeight (Node color left _ _)
 insert :: (Ord a) => a -> RBTree a -> RBTree a
 insert x tree = makeBlack $ ins tree
   where
+    ins :: RBTree a -> RBTree a
     ins Leaf = Node Red Leaf x Leaf
     ins (Node color left val right)
       | x < val = balanceInsert (Node color (ins left) val right)
@@ -96,6 +98,5 @@ redRedInvariant tree
   | getColor tree == Red = getColor (getLeft tree) /= Red && getColor (getRight tree) /= Red
   | otherwise = True
 
-{-@ badTree :: {v:RBTree Int | redRedInvariant v} @-}
-badTree :: RBTree Int
-badTree = Node Red (Node Red (Node Red Leaf 4 Leaf) 2 Leaf) 1 (Node Black Leaf 3 Leaf)
+-- badTree :: RBTree Int
+-- badTree = Node Red (Node Red (Node Red Leaf 4 Leaf) 2 Leaf) 1 (Node Black Leaf 3 Leaf)
