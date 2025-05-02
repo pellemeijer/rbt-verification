@@ -8,9 +8,10 @@ module RedBlackTree
     insert,
     listToTree,
     getColor,
-    getVal,
   )
 where
+
+import GHC.RTS.Flags (DebugFlags (weak))
 
 data Color = Red | Black
   deriving (Show, Eq)
@@ -24,7 +25,7 @@ data RBTree a = Leaf | Node Color (RBTree a) a (RBTree a)
              -> {l:RBTree a | isRedBlackTree l && (color == Black || getColor l == Black)}
              -> v:a
              -> {r:RBTree a | isRedBlackTree r && blackHeight r == blackHeight l && (color == Black || getColor r == Black)}
-             -> {v:RBTree a | isRedBlackTree v}
+             -> {v:RBTree a | isRedBlackTree v && size v == 1 + size l + size r && color == getColor v}
 @-}
 nodeT :: Color -> RBTree a -> a -> RBTree a -> RBTree a
 nodeT color left val right = Node color left val right
@@ -33,7 +34,7 @@ nodeT color left val right = Node color left val right
 listToTree :: (Ord a) => [a] -> RBTree a
 listToTree = foldl (flip insert) Leaf
 
-{-@ isMember :: (Ord a) => a -> t:{RBTree a | isRedBlackTree t} -> Bool @-}
+{-@ isMember :: (Ord a) => x:a -> t:{RBTree a | isRedBlackTree t} -> Bool  @-}
 isMember :: (Ord a) => a -> RBTree a -> Bool
 isMember _ Leaf = False
 isMember x (Node _ left val right)
@@ -46,36 +47,53 @@ getColor :: RBTree a -> Color
 getColor (Node color _ _ _) = color
 getColor Leaf = Black
 
-{-@ measure getVal @-}
-getVal :: RBTree a -> Maybe a
-getVal (Node _ _ val _) = Just val
-getVal Leaf = Nothing
+{-@ measure size @-}
+size :: RBTree a -> Int
+size Leaf = 0
+size (Node _ left val right) = 1 + size left + size right
 
-{-@ insert :: (Ord a) => a -> x:{RBTree a | isRedBlackTree x} -> v:{RBTree a | isRedBlackTree x} @-}
+{-@ measure getLeft @-}
+getLeft :: RBTree a -> RBTree a
+getLeft Leaf = Leaf
+getLeft (Node _ left _ _) = left
+
+{-@ measure getRight @-}
+getRight :: RBTree a -> RBTree a
+getRight Leaf = Leaf
+getRight (Node _ _ _ right) = right
+
+{-@ insert :: (Ord a) => x:a -> t:{RBTree a | isRedBlackTree t} -> v:{RBTree a | isRedBlackTree t} @-}
 insert :: (Ord a) => a -> RBTree a -> RBTree a
 insert x tree = makeBlack $ ins tree
   where
-    ins :: RBTree a -> RBTree a
-    ins Leaf = nodeT Red Leaf x Leaf
-    ins (Node color left val right)
-      | x < val = balanceInsert (nodeT color (ins left) val right)
-      | x > val = balanceInsert (nodeT color left val (ins right))
-      | otherwise = Node color left val right -- x == val
+    {-@ makeBlack :: t:{RBTree a | weakIsRedBlackTree t} -> v:{RBTree a | isRedBlackTree v} @-}
     makeBlack :: RBTree a -> RBTree a
     makeBlack (Node _ left val right) = nodeT Black left val right
     makeBlack Leaf = Leaf
+    {-@ ins :: t:{RBTree a | isRedBlackTree t} -> v:{RBTree a | weakIsRedBlackTree v} @-}
+    ins :: RBTree a -> RBTree a
+    ins Leaf = nodeT Red Leaf x Leaf
+    ins (Node color left val right)
+      | x < val = balanceInsert color (ins left) val right
+      | x > val = balanceInsert color left val (ins right)
+      | otherwise = nodeT color left val right -- x == val
 
-{-@ balanceInsert :: RBTree a -> v:{RBTree a | isRedBlackTree v} @-}
-balanceInsert :: RBTree a -> RBTree a
-balanceInsert (Node Black (Node Red (Node Red a x b) y c) z d) =
-  nodeT Red (nodeT Black a x b) y (nodeT Black c z d)
-balanceInsert (Node Black (Node Red a x (Node Red b y c)) z d) =
-  nodeT Red (nodeT Black a x b) y (nodeT Black c z d)
-balanceInsert (Node Black a x (Node Red (Node Red b y c) z d)) =
-  nodeT Red (nodeT Black a x b) y (nodeT Black c z d)
-balanceInsert (Node Black a x (Node Red b y (Node Red c z d))) =
-  nodeT Red (nodeT Black a x b) y (nodeT Black c z d)
-balanceInsert tree = tree
+{-@ balanceInsert :: color:Color
+                  -> left:{RBTree a | weakIsRedBlackTree left}
+                  -> val:a
+                  -> right:{RBTree a | weakIsRedBlackTree right && blackHeight left == blackHeight right && (isRedBlackTree left || isRedBlackTree right)}
+                  -> v:{RBTree a | weakIsRedBlackTree v && blackHeight v == (if color == Black then 1 else 0) + blackHeight left }
+@-}
+balanceInsert :: Color -> RBTree a -> a -> RBTree a -> RBTree a
+balanceInsert Black (Node Red (Node Red a x b) y c) z d = Node Red (Node Black a x b) y (Node Black c z d)
+balanceInsert Black (Node Red a x (Node Red b y c)) z d = Node Red (Node Black a x b) y (Node Black c z d)
+balanceInsert Black a x (Node Red (Node Red b y c) z d) = Node Red (Node Black a x b) y (Node Black c z d)
+balanceInsert Black a x (Node Red b y (Node Red c z d)) = Node Red (Node Black a x b) y (Node Black c z d)
+balanceInsert color left val right = helper (Node (color left val right))
+  where
+    {-@ helper :: t:{RBTree a | weakIsRedBlackTree t} -> v:{RBTree a | weakIsRedBlackTree v} @-}
+    helper :: RBTree a -> RBTree a
+    helper t = t
 
 {-@ measure redInvariant @-}
 redInvariant :: RBTree a -> Bool
@@ -103,5 +121,9 @@ blackInvariant (Node color left _ right) =
 isRedBlackTree :: RBTree a -> Bool
 isRedBlackTree t = redInvariant t && blackInvariant t
 
--- badTree :: RBTree Int
--- badTree = Node Red (Node Red (Node Red Leaf 4 Leaf) 2 Leaf) 1 (Node Black Leaf 3 Leaf)
+{-@ inline weakIsRedBlackTree @-}
+weakIsRedBlackTree :: RBTree a -> Bool
+weakIsRedBlackTree t =
+  (if getColor t == Black then isRedBlackTree t else blackInvariant t)
+    && isRedBlackTree (getLeft t)
+    && isRedBlackTree (getRight t)
