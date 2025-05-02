@@ -89,11 +89,7 @@ balanceInsert Black (Node Red (Node Red a x b) y c) z d = Node Red (Node Black a
 balanceInsert Black (Node Red a x (Node Red b y c)) z d = Node Red (Node Black a x b) y (Node Black c z d)
 balanceInsert Black a x (Node Red (Node Red b y c) z d) = Node Red (Node Black a x b) y (Node Black c z d)
 balanceInsert Black a x (Node Red b y (Node Red c z d)) = Node Red (Node Black a x b) y (Node Black c z d)
-balanceInsert color left val right = helper (Node (color left val right))
-  where
-    {-@ helper :: t:{RBTree a | weakIsRedBlackTree t} -> v:{RBTree a | weakIsRedBlackTree v} @-}
-    helper :: RBTree a -> RBTree a
-    helper t = t
+balanceInsert color left val right = Node color left val right
 
 {-@ measure redInvariant @-}
 redInvariant :: RBTree a -> Bool
