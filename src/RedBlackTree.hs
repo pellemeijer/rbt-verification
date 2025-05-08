@@ -8,6 +8,7 @@ module RedBlackTree
     insert,
     listToTree,
     getColor,
+    RBT (..),
   )
 where
 

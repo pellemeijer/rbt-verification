@@ -3,7 +3,7 @@ module Main (main) where
 import RedBlackTree
 import Test.HUnit
 
-checkRedRed :: RBTree a -> Bool
+checkRedRed :: RBT a -> Bool
 checkRedRed Leaf = True
 checkRedRed (Node Black left _ right) = checkRedRed left && checkRedRed right
 checkRedRed (Node Red left _ right) = checkChild left && checkChild right && checkRedRed left && checkRedRed right
@@ -60,7 +60,7 @@ testIsMember =
         "member missing larger" ~: False ~=? isMember 20 (listToTree ([10, 5, 15] :: [Int]))
       ]
 
-tree1_10 :: RBTree Int
+tree1_10 :: RBT Int
 tree1_10 = listToTree ([1 .. 10] :: [Int])
 
 testOkasakiInsert :: Test
